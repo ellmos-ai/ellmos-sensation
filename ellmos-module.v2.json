@@ -1,0 +1,13 @@
+{
+  "schema": "ellmos.module.v2",
+  "id": "ellmos-sensation",
+  "name": "ellmos-sensation",
+  "version": "0.1.0",
+  "category": "device-perception",
+  "description": "Permission-gated camera presence, microphone ambient sensing, sound synthesis, and Open-Compute presence gate.",
+  "repository": "https://github.com/ellmos-ai/ellmos-sensation",
+  "entrypoints": {
+    "python": "ellmos_sensation.sensor_hub",
+    "cli": "ellmos_sensation.cli:main"
+  }
+}
