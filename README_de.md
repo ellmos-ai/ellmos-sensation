@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/banner.svg" alt="ellmos-sensation banner" width="100%">
+</p>
+
 # ellmos-sensation
 
 [English](README.md) | **Deutsch**
