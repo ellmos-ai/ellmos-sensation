@@ -9,18 +9,31 @@ description = "Permission-gated camera presence, microphone ambient sensing, sou
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
+license-files = ["LICENSE"]
 authors = [{ name = "ellmos-ai" }]
 classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Typing :: Typed",
 ]
 dependencies = []
 
+[project.urls]
+Homepage = "https://github.com/ellmos-ai/ellmos-sensation"
+Repository = "https://github.com/ellmos-ai/ellmos-sensation"
+Changelog = "https://github.com/ellmos-ai/ellmos-sensation/blob/main/CHANGELOG.md"
+Security = "https://github.com/ellmos-ai/ellmos-sensation/blob/main/SECURITY.md"
+Issues = "https://github.com/ellmos-ai/ellmos-sensation/issues"
+
 [project.optional-dependencies]
-dev = ["pytest>=8.0"]
+dev = ["pytest>=8.0", "ruff>=0.8"]
 
 [project.scripts]
 ellmos-sensation = "ellmos_sensation.cli:main"
@@ -28,7 +41,10 @@ ellmos-sensation = "ellmos_sensation.cli:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+ellmos_sensation = ["py.typed"]
+
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
-
+norecursedirs = [".git", ".pytest_cache", ".pytest_temp", ".pytest_tmp*", ".ruff_cache", "__pycache__", "build", "dist", ".venv"]
