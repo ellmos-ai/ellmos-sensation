@@ -23,28 +23,47 @@ build/
 .mypy_cache/
 .coverage
 htmlcov/
+pytest_result.txt
 
 # Local secrets & environment
 .env
 .env.*
 .env.local
+!.env.example
+!.env.sample
 
 # Local databases & runtime data
 *.db
 *.sqlite
 *.sqlite3
+*.sqlite*
 data/
 
-# Certificates, keys & credentials
+# Certificates, keys, tokens & credentials
 *.pem
 *.key
 *.p12
 *.pfx
 *.crt
+*.cer
+*.cert
+*.csr
+*.token
+*.secret
+id_rsa*
+id_ed25519*
+id_ecdsa*
+id_dsa*
 .npmrc
 .pypirc
 credentials.json
 secrets.json
+*secret*.json
+*token*.json
+token.json
+tokens.json
+*_recovery_codes.txt
+*recovery*code*.txt
 
 # IDE & OS artifacts
 .idea/
@@ -54,6 +73,11 @@ secrets.json
 Thumbs.db
 desktop.ini
 
-# Multi-agent & fleet lock files
+# Multi-agent, audit & fleet sync artifacts
 LOCK*.txt
 LOCK-CACHE*
+MARKETING-LOG*
+CONFLICT_REVIEW_LOG*
+*-WORKSTATION-LG*
+*-ASUS-GEI*
+*-IDEAPAD-GEI*

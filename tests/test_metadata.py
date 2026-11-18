@@ -4,12 +4,17 @@ from __future__ import annotations
 
 import io
 import json
-from pathlib import Path
 import re
-import tomllib
+import sys
 import wave
+from pathlib import Path
 
 import pytest
+
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib
 
 import ellmos_sensation
 from ellmos_sensation import (
@@ -29,21 +34,28 @@ def test_version_parity_and_pyproject_metadata():
     manifest = json.loads((ROOT / "ellmos-module.v2.json").read_text(encoding="utf-8"))
 
     project = pyproject["project"]
+    assert pyproject["build-system"]["requires"] == ["setuptools>=77"]
     assert project["name"] == "ellmos-sensation"
     assert project["version"] == ellmos_sensation.__version__ == manifest["version"] == "0.1.0"
     assert project["license"] == "MIT"
-    assert project["license-files"] == ["LICENSE"]
+    assert project["license-files"] == ["LICENSE", "THIRD_PARTY_LICENSES.md"]
+    assert all(not c.startswith("License ::") for c in project["classifiers"])
     assert "Typing :: Typed" in project["classifiers"]
     assert "ellmos-sensation" in project["scripts"]
     assert "Security" in project["urls"]
+    assert "Third-Party Licenses" in project["urls"]
 
     pkg_data = pyproject["tool"]["setuptools"]["package-data"]
     assert "py.typed" in pkg_data["ellmos_sensation"]
+
+    pytest_ini = pyproject["tool"]["pytest"]["ini_options"]
+    assert "--basetemp" not in str(pytest_ini.get("addopts", ""))
 
 
 def test_pep561_py_typed_and_required_release_files():
     assert (ROOT / "src" / "ellmos_sensation" / "py.typed").is_file()
     assert (ROOT / "LICENSE").is_file()
+    assert (ROOT / "THIRD_PARTY_LICENSES.md").is_file()
     assert (ROOT / "CHANGELOG.md").is_file()
 
     security_text = (ROOT / "SECURITY.md").read_text(encoding="utf-8")
@@ -51,6 +63,29 @@ def test_pep561_py_typed_and_required_release_files():
     assert "48 hours" in security_text and "48 Stunden" in security_text
     assert "5 business days" in security_text and "5 Werktagen" in security_text
     assert "30 calendar days" in security_text and "30 Kalendertagen" in security_text
+
+
+def test_sbom_ci_dependabot_and_security_hygiene_contracts():
+    sbom = (ROOT / "THIRD_PARTY_LICENSES.md").read_text(encoding="utf-8")
+    for token in ("ellmos-sensation", "0.1.0", "MIT", "INV-SLA-09", "INV-SLA-10", "2026-11-18"):
+        assert token in sbom
+
+    ci_path = ROOT / ".github" / "workflows" / "ci.yml"
+    assert ci_path.is_file()
+    ci_text = ci_path.read_text(encoding="utf-8")
+    assert "contents: read" in ci_text
+    assert 'PYTHONUTF8: "1"' in ci_text
+    for py_ver in ('"3.10"', '"3.11"', '"3.12"', '"3.13"'):
+        assert py_ver in ci_text
+    assert "ruff check" in ci_text
+    assert "pytest" in ci_text
+    assert "compileall" in ci_text
+
+    dep_path = ROOT / ".github" / "dependabot.yml"
+    assert dep_path.is_file()
+    dep_text = dep_path.read_text(encoding="utf-8")
+    assert 'package-ecosystem: "pip"' in dep_text
+    assert 'package-ecosystem: "github-actions"' in dep_text
 
 
 def test_module_manifest_v2_schema_compliance():
@@ -70,7 +105,31 @@ def test_module_manifest_v2_schema_compliance():
 
 def test_gitignore_and_todo_status_contract():
     gitignore = (ROOT / ".gitignore").read_text(encoding="utf-8")
-    for entry in ("__pycache__", "*.pyc", ".env", "*.db", ".venv", ".idea", ".vscode", "data", "LOCK*.txt"):
+    for entry in (
+        "__pycache__",
+        "*.pyc",
+        ".env",
+        "*.db",
+        ".venv",
+        ".idea",
+        ".vscode",
+        "data",
+        "LOCK*.txt",
+        "id_rsa*",
+        "id_ed25519*",
+        "id_ecdsa*",
+        "id_dsa*",
+        "*.csr",
+        "*.token",
+        "*.secret",
+        "*secret*.json",
+        "*token*.json",
+        "MARKETING-LOG*",
+        "CONFLICT_REVIEW_LOG*",
+        "*-WORKSTATION-LG*",
+        "*-ASUS-GEI*",
+        "*-IDEAPAD-GEI*",
+    ):
         assert entry in gitignore
 
     todo = (ROOT / "TODO.md").read_text(encoding="utf-8")
@@ -88,7 +147,7 @@ def test_bilingual_readme_and_zero_personal_paths():
 
     user_token = "luk" + "as"
     personal_re = re.compile(
-        rf"C:[\\/]+Users[\\/]+(?:{user_token}|User)(?=[\\/]|$)|/home/{user_token}",
+        rf"C:[\\/]+Users[\\/]+(?:{user_token}|User)(?=[\\/]|$)|/home/{user_token}|/Users/{user_token}",
         re.IGNORECASE,
     )
     for path in list((ROOT / "src").rglob("*.py")) + list((ROOT / "tests").rglob("*.py")):
