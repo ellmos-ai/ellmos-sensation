@@ -3,10 +3,14 @@
 from __future__ import annotations
 
 import json
+import math
+
 import pytest
 
 from ellmos_sensation import (
     CameraPresenceSensor,
+    MicrophoneAmbientSensor,
+    OpenComputePresenceGate,
     SensationHub,
     SensationPermissions,
 )
@@ -58,3 +62,122 @@ def test_cli_status_and_gate(capsys):
     assert main(["open-compute-gate", "--allow-camera"]) == 0
     gate_out = json.loads(capsys.readouterr().out)
     assert gate_out["camera_checked"] is True
+
+
+def test_permissions_reject_non_bool_and_method_overwrite():
+    for bad_val in ("false", "true", "0", 0, 1, None):
+        with pytest.raises(TypeError):
+            SensationPermissions(camera=bad_val)  # type: ignore[arg-type]
+        with pytest.raises(TypeError):
+            SensationPermissions(microphone=bad_val)  # type: ignore[arg-type]
+        with pytest.raises(TypeError):
+            SensationPermissions(sound_output=bad_val)  # type: ignore[arg-type]
+
+    hub = SensationHub()
+    with pytest.raises(TypeError):
+        hub.set_permissions(camera="false")  # type: ignore[arg-type]
+    assert hub.permissions.camera is False
+
+    # Atomic fail-closed update: valid flag must not stay mutated when another arg is invalid
+    with pytest.raises(TypeError):
+        hub.set_permissions(camera=True, microphone="false")  # type: ignore[arg-type]
+    assert hub.permissions.camera is False
+
+    # Method attributes like as_dict must not be writable via set_permissions
+    with pytest.raises(ValueError, match="Unknown permission flag"):
+        hub.set_permissions(as_dict=False)
+    assert callable(hub.permissions.as_dict)
+    assert hub.status()["permissions"]["camera"] is False
+
+    # Direct post-init attribute tampering must also fail closed across all entrypoints
+    tampered = SensationPermissions()
+    tampered.camera = "false"  # type: ignore[assignment]
+    with pytest.raises(TypeError):
+        hub.camera.check_presence(tampered)
+    tampered_sound = SensationPermissions()
+    tampered_sound.sound_output = "false"  # type: ignore[assignment]
+    with pytest.raises(TypeError):
+        hub.synthesizer.synthesize_cue_wav("chime", tampered_sound)
+
+
+def test_open_compute_gate_rejects_nan_inf_negative_overflow_and_bool_inputs(capsys):
+    gate = OpenComputePresenceGate()
+    perms_off = SensationPermissions(camera=False)
+    perms_on = SensationPermissions(camera=True)
+
+    for bad_num in (float("nan"), float("inf"), float("-inf"), -0.001, -120.0, 10**400):
+        with pytest.raises(ValueError):
+            gate.evaluate(perms_off, idle_seconds=bad_num)
+        with pytest.raises(ValueError):
+            gate.evaluate(perms_off, min_idle_seconds_when_camera_off=bad_num)
+        with pytest.raises(ValueError):
+            gate.evaluate(perms_on, idle_seconds=bad_num)
+
+    for bad_type in (True, False, "120", None):
+        with pytest.raises(TypeError):
+            gate.evaluate(perms_off, idle_seconds=bad_type)  # type: ignore[arg-type]
+        with pytest.raises(TypeError):
+            gate.evaluate(perms_off, min_idle_seconds_when_camera_off=bad_type)  # type: ignore[arg-type]
+
+    # IEEE-754 negative zero (-0.0) is accepted and pauses open-compute cleanly
+    neg_zero_res = gate.evaluate(perms_off, idle_seconds=-0.0)
+    assert neg_zero_res["should_pause_open_compute"] is True
+    assert main(["open-compute-gate", "--idle-seconds", "-0.0"]) == 0
+    cli_out = json.loads(capsys.readouterr().out)
+    assert cli_out["should_pause_open_compute"] is True
+
+
+def test_cli_open_compute_gate_rejects_invalid_idle_seconds():
+    for bad_arg in ("nan", "NaN", "inf", "-inf", "-1", "-0.1", "abc"):
+        with pytest.raises(SystemExit) as exc:
+            main(["open-compute-gate", "--idle-seconds", bad_arg])
+        assert exc.value.code == 2
+
+
+def test_camera_and_microphone_sensors_validate_adapter_outputs():
+    cam_perms = SensationPermissions(camera=True)
+
+    with pytest.raises(ValueError, match="3-tuple"):
+        CameraPresenceSensor(detector=lambda: [True, 1, 0.9]).check_presence(cam_perms)  # type: ignore[return-value]
+    with pytest.raises(ValueError, match="3-tuple"):
+        CameraPresenceSensor(detector=lambda: (True, 1)).check_presence(cam_perms)  # type: ignore[return-value]
+    with pytest.raises(TypeError):
+        CameraPresenceSensor(detector=lambda: ("yes", 1, 0.9)).check_presence(cam_perms)  # type: ignore[return-value]
+    with pytest.raises(ValueError):
+        CameraPresenceSensor(detector=lambda: (True, -1, 0.9)).check_presence(cam_perms)
+    with pytest.raises(ValueError):
+        CameraPresenceSensor(detector=lambda: (True, True, 0.9)).check_presence(cam_perms)
+    with pytest.raises(ValueError):
+        CameraPresenceSensor(detector=lambda: (True, 1, float("nan"))).check_presence(cam_perms)
+    with pytest.raises(ValueError):
+        CameraPresenceSensor(detector=lambda: (True, 1, 10**400)).check_presence(cam_perms)
+    with pytest.raises(ValueError):
+        CameraPresenceSensor(detector=lambda: (True, 1, 1.01)).check_presence(cam_perms)
+    with pytest.raises(ValueError):
+        CameraPresenceSensor(detector=lambda: (True, 1, -0.01)).check_presence(cam_perms)
+    with pytest.raises(ValueError, match="Contradictory detector result"):
+        CameraPresenceSensor(detector=lambda: (False, 1, 0.95)).check_presence(cam_perms)
+
+    obs_zero = CameraPresenceSensor(detector=lambda: (False, 0, -0.0)).check_presence(cam_perms)
+    assert math.copysign(1.0, obs_zero.confidence) == 1.0
+
+    mic_perms = SensationPermissions(microphone=True)
+    with pytest.raises(ValueError, match="2-tuple"):
+        MicrophoneAmbientSensor(sampler=lambda: [35.0, False]).sample_ambient(mic_perms)  # type: ignore[return-value]
+    with pytest.raises(ValueError, match="2-tuple"):
+        MicrophoneAmbientSensor(sampler=lambda: (35.0,)).sample_ambient(mic_perms)  # type: ignore[return-value]
+    with pytest.raises(ValueError):
+        MicrophoneAmbientSensor(sampler=lambda: (float("nan"), False)).sample_ambient(mic_perms)
+    with pytest.raises(ValueError):
+        MicrophoneAmbientSensor(sampler=lambda: (float("inf"), False)).sample_ambient(mic_perms)
+    with pytest.raises(ValueError):
+        MicrophoneAmbientSensor(sampler=lambda: (float("-inf"), False)).sample_ambient(mic_perms)
+    with pytest.raises(ValueError):
+        MicrophoneAmbientSensor(sampler=lambda: (10**400, False)).sample_ambient(mic_perms)
+    with pytest.raises(TypeError):
+        MicrophoneAmbientSensor(sampler=lambda: (True, False)).sample_ambient(mic_perms)
+    with pytest.raises(TypeError):
+        MicrophoneAmbientSensor(sampler=lambda: (40.0, "false")).sample_ambient(mic_perms)  # type: ignore[return-value]
+
+    amb_zero = MicrophoneAmbientSensor(sampler=lambda: (-0.001, False)).sample_ambient(mic_perms)
+    assert math.copysign(1.0, amb_zero.ambient_db) == 1.0
