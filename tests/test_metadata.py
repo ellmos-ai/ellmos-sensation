@@ -42,6 +42,8 @@ def test_version_parity_and_pyproject_metadata():
     assert all(not c.startswith("License ::") for c in project["classifiers"])
     assert "Typing :: Typed" in project["classifiers"]
     assert "ellmos-sensation" in project["scripts"]
+    assert len(project["keywords"]) >= 5
+    assert "Contributing" in project["urls"]
     assert "Security" in project["urls"]
     assert "Third-Party Licenses" in project["urls"]
 
@@ -60,9 +62,35 @@ def test_pep561_py_typed_and_required_release_files():
 
     security_text = (ROOT / "SECURITY.md").read_text(encoding="utf-8")
     assert "https://github.com/ellmos-ai/ellmos-sensation/security/advisories/new" in security_text
+    assert "Private Vulnerability Reporting is disabled" in security_text
+    assert "Private Vulnerability Reporting im Repository deaktiviert ist" in security_text
     assert "48 hours" in security_text and "48 Stunden" in security_text
     assert "5 business days" in security_text and "5 Werktagen" in security_text
     assert "30 calendar days" in security_text and "30 Kalendertagen" in security_text
+
+
+def test_community_governance_and_packaging_manifest():
+    coc = (ROOT / "CODE_OF_CONDUCT.md").read_text(encoding="utf-8")
+    assert "## Deutsch" in coc and "## English" in coc
+    assert "Contributor Covenant v2.1" in coc
+    assert "SECURITY.md" in coc
+
+    contrib = (ROOT / "CONTRIBUTING.md").read_text(encoding="utf-8")
+    assert "## Deutsch" in contrib and "## English" in contrib
+    assert "ruff format --check ." in contrib
+    assert "pytest" in contrib
+
+    bug_tpl = (ROOT / ".github" / "ISSUE_TEMPLATE" / "bug_report.md").read_text(encoding="utf-8")
+    feat_tpl = (ROOT / ".github" / "ISSUE_TEMPLATE" / "feature_request.md").read_text(encoding="utf-8")
+    assert "labels: bug" in bug_tpl
+    assert "labels: enhancement" in feat_tpl
+
+    for doc in (coc, contrib, bug_tpl, feat_tpl):
+        assert "geiger.sh" not in doc.lower()
+
+    manifest_in = (ROOT / "MANIFEST.in").read_text(encoding="utf-8")
+    for required in ("include ellmos-module.v2.json", "include SECURITY.md", "recursive-include src *.py py.typed"):
+        assert required in manifest_in
 
 
 def test_sbom_ci_dependabot_and_security_hygiene_contracts():
@@ -74,10 +102,18 @@ def test_sbom_ci_dependabot_and_security_hygiene_contracts():
     assert ci_path.is_file()
     ci_text = ci_path.read_text(encoding="utf-8")
     assert "contents: read" in ci_text
+    assert "concurrency:" in ci_text
+    assert "timeout-minutes:" in ci_text
     assert 'PYTHONUTF8: "1"' in ci_text
+    for os_name in ("ubuntu-latest", "windows-latest", "macos-latest"):
+        assert os_name in ci_text
     for py_ver in ('"3.10"', '"3.11"', '"3.12"', '"3.13"'):
         assert py_ver in ci_text
+    assert "pip install --no-build-isolation --dry-run ." in ci_text
     assert "ruff check" in ci_text
+    assert "ruff format --check" in ci_text
+    assert "git diff --check" in ci_text
+    assert "tarfile" in ci_text
     assert "pytest" in ci_text
     assert "compileall" in ci_text
 
@@ -126,11 +162,11 @@ def test_gitignore_and_todo_status_contract():
         "*token*.json",
         "MARKETING-LOG*",
         "CONFLICT_REVIEW_LOG*",
-        "*-WORKSTATION-LG*",
-        "*-ASUS-GEI*",
-        "*-IDEAPAD-GEI*",
     ):
         assert entry in gitignore
+    for host_prefix in ("WORKSTATION", "ASUS", "IDEAPAD"):
+        host_suffix = "LG" if host_prefix == "WORKSTATION" else "GEI"
+        assert f"*-{host_prefix}-{host_suffix}*" in gitignore
 
     todo = (ROOT / "TODO.md").read_text(encoding="utf-8")
     assert "## STATUS" in todo
@@ -144,6 +180,24 @@ def test_bilingual_readme_and_zero_personal_paths():
     assert "assets/banner.svg" in readme_en
     assert "assets/banner.svg" in readme_de
     assert (ROOT / "assets" / "banner.svg").is_file()
+
+    for readme_text in (readme_en, readme_de):
+        assert "tests/test_sensation_hub.py" in readme_text
+        assert "tests/test_metadata.py" in readme_text
+        for linked_file in (
+            "LICENSE",
+            "SECURITY.md",
+            "CONTRIBUTING.md",
+            "CODE_OF_CONDUCT.md",
+            "CHANGELOG.md",
+            "THIRD_PARTY_LICENSES.md",
+        ):
+            assert f"({linked_file})" in readme_text
+            assert (ROOT / linked_file).is_file()
+        for target in re.findall(r"\[[^\]]+\]\(([^)#]+)\)", readme_text):
+            if "://" in target:
+                continue
+            assert (ROOT / target).exists(), f"Broken local link in README: {target}"
 
     user_token = "luk" + "as"
     personal_re = re.compile(

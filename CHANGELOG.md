@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Bilingual community governance files (`CODE_OF_CONDUCT.md`, `CONTRIBUTING.md`) and `.github/ISSUE_TEMPLATE/{bug_report.md,feature_request.md}` (DE/EN).
+- `MANIFEST.in` source-distribution manifest ensuring deterministic packaging of docs, `ellmos-module.v2.json`, `py.typed`, assets, and tests.
+- PEP 621 `keywords` and `Contributing` URL in `pyproject.toml` (version `0.1.0` unchanged).
+- Expanded contract and CLI boundary tests in `tests/test_metadata.py` and `tests/test_sensation_hub.py`.
+
+### Changed
+- Hardened `.github/workflows/ci.yml` with `concurrency` cancellation, `timeout-minutes: 10`, cross-platform matrix across `ubuntu-latest` (3.10–3.13), `windows-latest` (3.12–3.13), and `macos-latest` (3.12–3.13), `pip install --no-build-isolation --dry-run .`, sdist verification, `git diff --check`, and `ruff format --check .`.
+- Updated `SECURITY.md` with an explicit non-sensitive coordination fallback when GitHub Private Vulnerability Reporting is disabled on the repository.
+- Updated `README.md` and `README_de.md` to reference both `tests/test_sensation_hub.py` and `tests/test_metadata.py` and link governance/license documents.
+- Added CLI option `--help` descriptions for `open-compute-gate` and aligned source formatting with `ruff format`.
+
 ### Security
 - **Fail-closed `OpenComputePresenceGate` & CLI validation (`CWE-20`):** `OpenComputePresenceGate.evaluate()` and `ellmos-sensation open-compute-gate --idle-seconds` now reject `NaN`, `±Infinity`, boolean, and negative idle-time values instead of silently evaluating `NaN < threshold` as `False`. CLI output enforces strict RFC-8259 JSON (`allow_nan=False`).
 - **Strict boolean permission enforcement (`CWE-704`):** `SensationPermissions` and `SensationHub.set_permissions()` now enforce strict `bool` values (rejecting truthy strings such as `"false"` or `"0"` and non-boolean types with `TypeError`), restrict `set_permissions()` atomically to the declared permission fields (`camera`, `microphone`, `sound_output`), and guard sensor entrypoints against post-init attribute tampering.

@@ -25,8 +25,9 @@
 
 Please **do not** report unpatched security vulnerabilities through public GitHub issues, pull requests, or discussions.
 
-Report vulnerabilities privately via **GitHub Private Vulnerability Reporting**:
+Report vulnerabilities privately via **GitHub Private Vulnerability Reporting** when enabled:
 - **Advisory Portal:** <https://github.com/ellmos-ai/ellmos-sensation/security/advisories/new>
+- **Fallback (if Private Vulnerability Reporting is disabled on the repository):** Open a minimal, non-sensitive issue asking maintainer `@lukisch` to initiate a private disclosure channel — **never** include exploit code, reproduction payloads, secrets, or private captures in a public issue.
 
 Include affected version, platform, minimal reproduction steps, and impact assessment. Never include live credentials or personal hardware captures in reports.
 
@@ -60,8 +61,9 @@ Our binding response and remediation targets (`INV-SLA-09` & `INV-SLA-10`):
 
 Bitte melden Sie ungepatchte Sicherheitslücken **niemals** über öffentliche GitHub-Issues, Pull-Requests oder Diskussionen.
 
-Nutzen Sie ausschließlich die vertrauliche Meldung über **GitHub Private Vulnerability Reporting**:
+Nutzen Sie vorrangig die vertrauliche Meldung über **GitHub Private Vulnerability Reporting** (sofern aktiviert):
 - **Sicherheitsmeldung einreichen:** <https://github.com/ellmos-ai/ellmos-sensation/security/advisories/new>
+- **Fallback (falls Private Vulnerability Reporting im Repository deaktiviert ist):** Erstellen Sie ein minimales, nicht-sensibles Issue mit der Bitte an Maintainer `@lukisch`, einen privaten Meldekanal einzurichten — veröffentlichen Sie dort **niemals** Exploit-Code, Reproduktionsdaten, Secrets oder private Aufnahmen.
 
 Verbindliche Reaktions- und Behebungsziele (`INV-SLA-09` & `INV-SLA-10`):
 - **Eingangsbestätigung:** innerhalb von **48 Stunden**

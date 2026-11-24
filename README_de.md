@@ -50,12 +50,20 @@ hub = SensationHub(
 print(hub.open_compute_gate.evaluate(hub.permissions)["should_pause_open_compute"])  # False
 ```
 
-Die Tests liegen in `tests/test_sensation_hub.py` (Aufruf mit `pytest`).
+Die Tests liegen in `tests/test_sensation_hub.py` und `tests/test_metadata.py` (Aufruf mit `pytest`, `ruff check .` und `ruff format --check .`).
 
 ## Bezug zu ellmos und Open Ocean
 
 `ellmos-sensation` gehört zu den Erweiterungsmodulen in der Modulzuordnung von [Open Ocean](https://github.com/ellmos-ai/open-ocean). Das Gate soll einen am Rechner arbeitenden Nutzer vor der Automation durch [open-compute](https://github.com/ellmos-ai/open-compute) schützen; die Anbindung auf der open-compute-Seite ist nicht Teil dieses Repositories. Die Modul-Metadaten stehen in `ellmos-module.v2.json`.
 
+## Sicherheit & Governance
+
+- [Sicherheitsrichtlinie](SECURITY.md) — Fail-Closed-Berechtigungen, Zero-Egress-RAM-Only-Grenzen und Meldewege (`48h` / `5d` / `30d` SLAs)
+- [Beitragsrichtlinie](CONTRIBUTING.md) — lokaler Prüf-Workflow und Pull-Request-Regeln
+- [Verhaltenskodex](CODE_OF_CONDUCT.md) — zweisprachige Community-Standards
+- [Änderungsprotokoll](CHANGELOG.md) — Versionshistorie nach Keep a Changelog
+- [Drittanbieter-Lizenzen & SBOM](THIRD_PARTY_LICENSES.md) — keine externen Laufzeitabhängigkeiten
+
 ## Lizenz
 
-MIT, wie in `pyproject.toml` angegeben.
+[MIT](LICENSE), wie in `pyproject.toml` angegeben.

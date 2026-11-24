@@ -23,11 +23,22 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = []
+keywords = [
+    "ellmos",
+    "sensation",
+    "presence-detection",
+    "ambient-audio",
+    "sound-synthesis",
+    "permissions",
+    "fail-closed",
+    "zero-egress",
+]
 
 [project.urls]
 Homepage = "https://github.com/ellmos-ai/ellmos-sensation"
 Repository = "https://github.com/ellmos-ai/ellmos-sensation"
 Changelog = "https://github.com/ellmos-ai/ellmos-sensation/blob/main/CHANGELOG.md"
+Contributing = "https://github.com/ellmos-ai/ellmos-sensation/blob/main/CONTRIBUTING.md"
 Security = "https://github.com/ellmos-ai/ellmos-sensation/blob/main/SECURITY.md"
 "Third-Party Licenses" = "https://github.com/ellmos-ai/ellmos-sensation/blob/main/THIRD_PARTY_LICENSES.md"
 Issues = "https://github.com/ellmos-ai/ellmos-sensation/issues"
