@@ -16,9 +16,7 @@ def _non_negative_finite_float(raw: str) -> float:
     except ValueError as exc:
         raise argparse.ArgumentTypeError(f"invalid float value: {raw!r}") from exc
     if not math.isfinite(value) or value < 0.0:
-        raise argparse.ArgumentTypeError(
-            f"must be a finite non-negative number, got {raw!r}"
-        )
+        raise argparse.ArgumentTypeError(f"must be a finite non-negative number, got {raw!r}")
     return 0.0 if value == 0.0 else value
 
 
@@ -32,8 +30,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     pres_p.add_argument("--allow-camera", action="store_true", help="Explicitly grant camera permission for this check")
 
     gate_p = sub.add_parser("open-compute-gate", help="Evaluate whether Open-Compute should pause")
-    gate_p.add_argument("--allow-camera", action="store_true")
-    gate_p.add_argument("--idle-seconds", type=_non_negative_finite_float, default=0.0)
+    gate_p.add_argument(
+        "--allow-camera", action="store_true", help="Explicitly grant camera permission for gate evaluation"
+    )
+    gate_p.add_argument(
+        "--idle-seconds",
+        type=_non_negative_finite_float,
+        default=0.0,
+        help="Finite non-negative seconds since last input activity (used when camera=False)",
+    )
 
     args = parser.parse_args(argv)
     hub = SensationHub(SensationPermissions())

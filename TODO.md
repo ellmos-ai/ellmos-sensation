@@ -24,7 +24,8 @@
 - [x] Synchronized `ellmos-module.v2.json` to full `ellmos.module.v2` schema (`category: "tools"`, `kind: "tool"`, `visibility: "public"`, `source_of_truth: git-repository`, `provides`, `surfaces`, `boundaries`) matching the module catalog.
 - [x] Added PEP 561 marker `src/ellmos_sensation/py.typed`, `"Typing :: Typed"` classifier, PEP 639 `license-files`, and `[project.urls]` in `pyproject.toml`.
 - [x] Created bilingual `SECURITY.md` (EN/DE, GitHub Private Vulnerability Reporting, `48h`/`5d`/`30d` SLAs) and `CHANGELOG.md`.
-- [x] Added security, metadata/contract, and sensor/CLI edge-case tests in `tests/test_sensation_hub.py` and `tests/test_metadata.py` (`17` tests).
+- [x] Added security, metadata/contract, and sensor/CLI edge-case tests in `tests/test_sensation_hub.py` and `tests/test_metadata.py` (`20` tests).
+- [x] **Path-A Repository Hygiene & Cross-Platform CI (2026-11-24):** Added `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md`, `.github/ISSUE_TEMPLATE/{bug_report.md,feature_request.md}`, `MANIFEST.in`, PEP 621 `keywords` & `Contributing` URL, cross-platform `ci.yml` (`ubuntu`/`windows`/`macos`, Python `3.10`–`3.13`, `concurrency`, `ruff format --check`, sdist/wheel verification), `SECURITY.md` non-sensitive PVR-disabled fallback, `README.md`/`README_de.md` governance & test links, and privacy-gate cleanup in `tests/test_metadata.py`.
 
 ---
 

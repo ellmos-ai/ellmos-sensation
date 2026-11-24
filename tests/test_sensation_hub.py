@@ -181,3 +181,33 @@ def test_camera_and_microphone_sensors_validate_adapter_outputs():
 
     amb_zero = MicrophoneAmbientSensor(sampler=lambda: (-0.001, False)).sample_ambient(mic_perms)
     assert math.copysign(1.0, amb_zero.ambient_db) == 1.0
+
+
+def test_cli_presence_help_and_fail_closed(capsys):
+    with pytest.raises(PermissionError, match="camera=False"):
+        main(["presence"])
+
+    assert main(["presence", "--allow-camera"]) == 0
+    pres_out = json.loads(capsys.readouterr().out)
+    assert pres_out["user_present_at_pc"] is True
+    assert pres_out["zero_egress_ram_only"] is True
+    assert pres_out["source"] == "local_ram_presence_probe"
+
+    with pytest.raises(SystemExit) as exc:
+        main(["--help"])
+    assert exc.value.code == 0
+    help_text = capsys.readouterr().out
+    for subcmd in ("status", "presence", "open-compute-gate"):
+        assert subcmd in help_text
+
+
+def test_microphone_exact_threshold_boundaries_and_empty_set_permissions():
+    perms = SensationPermissions(microphone=True)
+    assert MicrophoneAmbientSensor(sampler=lambda: (40.0, False)).sample_ambient(perms).noise_floor_state == "moderate"
+    assert MicrophoneAmbientSensor(sampler=lambda: (65.0, False)).sample_ambient(perms).noise_floor_state == "loud"
+
+    hub = SensationHub(permissions=SensationPermissions(camera=True, microphone=False, sound_output=False))
+    returned = hub.set_permissions()
+    assert returned.camera is True
+    assert returned.microphone is False
+    assert returned.sound_output is False

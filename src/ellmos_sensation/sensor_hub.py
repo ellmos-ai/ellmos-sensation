@@ -21,9 +21,7 @@ def _validate_permission_bool(name: str, value: object) -> None:
 
 def _require_permissions(permissions: SensationPermissions) -> None:
     if not isinstance(permissions, SensationPermissions):
-        raise TypeError(
-            f"'permissions' must be a SensationPermissions instance, got {type(permissions).__name__}."
-        )
+        raise TypeError(f"'permissions' must be a SensationPermissions instance, got {type(permissions).__name__}.")
     _validate_permission_bool("camera", permissions.camera)
     _validate_permission_bool("microphone", permissions.microphone)
     _validate_permission_bool("sound_output", permissions.sound_output)
@@ -112,9 +110,7 @@ class CameraPresenceSensor:
             if not (0.0 <= f_conf <= 1.0):
                 raise ValueError("detector 'confidence' must be a finite number in [0.0, 1.0].")
             if not present and count > 0:
-                raise ValueError(
-                    "Contradictory detector result: person_count > 0 while user_present_at_pc is False."
-                )
+                raise ValueError("Contradictory detector result: person_count > 0 while user_present_at_pc is False.")
             return PresenceObservation(
                 user_present_at_pc=present,
                 person_count=count,
